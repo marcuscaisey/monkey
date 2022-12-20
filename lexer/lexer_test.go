@@ -32,6 +32,12 @@ let result = add(five, ten);
 !-/*5;
 
 5 < 10 > 5;
+
+if (5 < 10) {
+    return true;
+} else {
+    return false;
+}
 `,
 			want: []token.Token{
 				{Type: token.Let, Literal: "let"},
@@ -82,6 +88,23 @@ let result = add(five, ten);
 				{Type: token.Greater, Literal: ">"},
 				{Type: token.Int, Literal: "5"},
 				{Type: token.Semicolon, Literal: ";"},
+				{Type: token.If, Literal: "if"},
+				{Type: token.LBrace, Literal: "("},
+				{Type: token.Int, Literal: "5"},
+				{Type: token.Less, Literal: "<"},
+				{Type: token.Int, Literal: "10"},
+				{Type: token.RBrace, Literal: ")"},
+				{Type: token.LBrace, Literal: "{"},
+				{Type: token.Return, Literal: "return"},
+				{Type: token.True, Literal: "true"},
+				{Type: token.Semicolon, Literal: ";"},
+				{Type: token.RBrace, Literal: "}"},
+				{Type: token.Else, Literal: "else"},
+				{Type: token.LBrace, Literal: "{"},
+				{Type: token.Return, Literal: "return"},
+				{Type: token.False, Literal: "false"},
+				{Type: token.Semicolon, Literal: ";"},
+				{Type: token.RBrace, Literal: "}"},
 				{Type: token.EOF},
 			},
 		},

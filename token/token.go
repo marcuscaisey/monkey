@@ -39,12 +39,22 @@ const (
 
 	// Keywords
 	Function TokenType = "FUNCTION"
+	Return   TokenType = "RETURN"
 	Let      TokenType = "LET"
+	If       TokenType = "IF"
+	Else     TokenType = "ELSE"
+	True     TokenType = "TRUE"
+	False    TokenType = "FALSE"
 )
 
 var keywordTokenTypesByIdent = map[string]TokenType{
 	"fn":  Function,
+	"return": Return,
 	"let": Let,
+	"if": If,
+	"else": Else,
+	"true": True,
+	"false": False,
 }
 
 // IdentTokenType returns the token type of the given identifier. Identifiers can either be regular identifiers or they
