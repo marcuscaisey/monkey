@@ -24,13 +24,26 @@ func TestNextTokenWithSimpleInput(t *testing.T) {
 		{Type: token.EOF},
 	}
 	got := mustReadAllTokens(t, src)
-	equalTokens(t, got, want, src)
+	equalTokens(t, want, got, src)
+}
+
+func TestNextTokenReturnsILLEGALForUnknownCharaceters(t *testing.T) {
+	src := "\\+\\+"
+	got := mustReadAllTokens(t, src)
+	want := []token.Token{
+		{Type: token.Illegal, Literal: `\`},
+		{Type: token.Plus, Literal: "+"},
+		{Type: token.Illegal, Literal: `\`},
+		{Type: token.Plus, Literal: "+"},
+		{Type: token.EOF},
+	}
+	equalTokens(t, want, got, src)
 }
 
 func TestNextTokenReturnsEOFIfSourceCodeIsEmpty(t *testing.T) {
 	want := []token.Token{{Type: token.EOF}}
 	got := mustReadAllTokens(t, "")
-	equalTokens(t, got, want, "")
+	equalTokens(t, want, got, "")
 }
 
 func TestNextTokenPanicsIfCalledAfterEOFReturned(t *testing.T) {
@@ -88,6 +101,7 @@ func mustReadAllTokens(t *testing.T, src string) []token.Token {
 }
 
 func mustReadAllTokensFromLexer(t *testing.T, lexer *lexer.Lexer) []token.Token {
+	t.Helper()
 	var tokens []token.Token
 	for {
 		nextToken, err := lexer.NextToken()
@@ -102,7 +116,8 @@ func mustReadAllTokensFromLexer(t *testing.T, lexer *lexer.Lexer) []token.Token 
 	return tokens
 }
 
-func equalTokens(t *testing.T, got, want []token.Token, src string) {
+func equalTokens(t *testing.T, want, got []token.Token, src string) {
+	t.Helper()
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("NextToken() returned incorrect tokens from source %q\ndiff:\n--- want\n+++ got\n%s", src, diff)
 	}
