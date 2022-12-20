@@ -4,6 +4,7 @@ package lexer
 
 import (
 	"fmt"
+	"strings"
 	"unicode"
 
 	"github.com/marcuscaisey/monkey/token"
@@ -41,35 +42,100 @@ func (l *Lexer) NextToken() (token.Token, error) {
 	if l.eofReturned {
 		panic("lexer: NextToken called after EOF returned")
 	}
+
+	l.consumeWhitespace()
 	if l.pos == len(l.src) {
 		l.eofReturned = true
 		return token.Token{Type: token.EOF}, nil
 	}
+
 	char := l.src[l.pos]
 	if char > unicode.MaxASCII {
 		return token.Token{}, &InvalidASCIIError{Byte: l.src[l.pos], Position: l.pos}
 	}
-	l.pos++
-	var tokenType token.TokenType
+
 	switch char {
 	case '=':
-		tokenType = token.Assign
+		l.pos++
+		return newToken(token.Assign, string(char)), nil
 	case '+':
-		tokenType = token.Plus
+		l.pos++
+		return newToken(token.Plus, string(char)), nil
 	case '(':
-		tokenType = token.LParen
+		l.pos++
+		return newToken(token.LBrace, string(char)), nil
 	case ')':
-		tokenType = token.RParen
+		l.pos++
+		return newToken(token.RBrace, string(char)), nil
 	case '{':
-		tokenType = token.LBrace
+		l.pos++
+		return newToken(token.LBrace, string(char)), nil
 	case '}':
-		tokenType = token.RBrace
+		l.pos++
+		return newToken(token.RBrace, string(char)), nil
 	case ',':
-		tokenType = token.Comma
+		l.pos++
+		return newToken(token.Comma, string(char)), nil
 	case ';':
-		tokenType = token.Semicolon
-	default:
-		tokenType = token.Illegal
+		l.pos++
+		return newToken(token.Semicolon, string(char)), nil
 	}
-	return token.Token{Type: tokenType, Literal: string(char)}, nil
+
+	if int := l.readInt(); int != "" {
+		return newToken(token.Int, int), nil
+	}
+
+	if ident := l.readIdent(); ident != "" {
+		tokenType := token.IdentTokenType(ident)
+		return newToken(tokenType, ident), nil
+	}
+
+	l.pos++
+	return newToken(token.Illegal, string(char)), nil
+}
+
+// consumeWhitespace consumes the whitespace at the current position in the source.
+func (l *Lexer) consumeWhitespace() {
+	for l.pos < len(l.src) && isWhitespace(l.src[l.pos]) {
+		l.pos++
+	}
+}
+
+func isWhitespace(char byte) bool {
+	switch char {
+	case '\t', '\n', '\v', '\f', '\r', ' ':
+		return true
+	default:
+		return false
+	}
+}
+
+// readInt reads the integer at the current position in the source and returns "" if there isn't one.
+func (l *Lexer) readInt() string {
+	int := strings.Builder{}
+	for ; l.pos < len(l.src) && isNumber(l.src[l.pos]); l.pos++ {
+		int.WriteString(string(l.src[l.pos]))
+	}
+	return int.String()
+}
+
+func isNumber(char byte) bool {
+	return '0' <= char && char <= '9'
+}
+
+// readIdent reads the identifier at the current position in the source and returns "" if there isn't one.
+func (l *Lexer) readIdent() string {
+	ident := strings.Builder{}
+	for ; l.pos < len(l.src) && isValidIdentChar(l.src[l.pos]); l.pos++ {
+		ident.WriteString(string(l.src[l.pos]))
+	}
+	return ident.String()
+}
+
+func isValidIdentChar(char byte) bool {
+	return ('a' <= char && char <= 'z') || ('A' <= char && char <= 'Z') || ('0' <= char && char <= '9') || char == '_'
+}
+
+func newToken(tokenType token.TokenType, literal string) token.Token {
+	return token.Token{Type: tokenType, Literal: literal}
 }

@@ -35,3 +35,17 @@ const (
 	Function TokenType = "FUNCTION"
 	Let      TokenType = "LET"
 )
+
+var keywordTokenTypesByIdent = map[string]TokenType{
+	"fn":  Function,
+	"let": Let,
+}
+
+// IdentTokenType returns the token type of the given identifier. Identifiers can either be regular identifiers or they
+// can be keywords.
+func IdentTokenType(ident string) TokenType {
+	if tokenType, ok := keywordTokenTypesByIdent[ident]; ok {
+		return tokenType
+	}
+	return Ident
+}
