@@ -24,18 +24,20 @@ const (
 	Minus    TokenType = "MINUS"
 	Slash    TokenType = "SLASH"
 	Asterisk TokenType = "ASTERISK"
+	Bang     TokenType = "BANG"
 	Less     TokenType = "LESS"
 	Greater  TokenType = "GREATER"
-	Bang     TokenType = "BANG"
+	Equal    TokenType = "EQUAL"
+	NotEqual TokenType = "NOT_EQUAL"
 
 	// Delimiters
 	Comma     TokenType = "COMMA"
 	Semicolon TokenType = "SEMICOLON"
 
-	LParen TokenType = "LPAREN"
-	RParen TokenType = "RPAREN"
-	LBrace TokenType = "LBRACE"
-	RBrace TokenType = "RBRACE"
+	LParen TokenType = "L_PAREN"
+	RParen TokenType = "R_PAREN"
+	LBrace TokenType = "L_BRACE"
+	RBrace TokenType = "R_BRACE"
 
 	// Keywords
 	Function TokenType = "FUNCTION"
@@ -48,13 +50,13 @@ const (
 )
 
 var keywordTokenTypesByIdent = map[string]TokenType{
-	"fn":  Function,
+	"fn":     Function,
 	"return": Return,
-	"let": Let,
-	"if": If,
-	"else": Else,
-	"true": True,
-	"false": False,
+	"let":    Let,
+	"if":     If,
+	"else":   Else,
+	"true":   True,
+	"false":  False,
 }
 
 // IdentTokenType returns the token type of the given identifier. Identifiers can either be regular identifiers or they

@@ -56,6 +56,10 @@ func (l *Lexer) NextToken() (token.Token, error) {
 
 	switch char {
 	case '=':
+		if strings.HasPrefix(l.src[l.pos:], "==") {
+			l.pos += 2
+			return newToken(token.Equal, "=="), nil
+		}
 		l.pos++
 		return newToken(token.Assign, string(char)), nil
 	case '+':
@@ -77,6 +81,10 @@ func (l *Lexer) NextToken() (token.Token, error) {
 		l.pos++
 		return newToken(token.Greater, string(char)), nil
 	case '!':
+		if strings.HasPrefix(l.src[l.pos:], "!=") {
+			l.pos += 2
+			return newToken(token.NotEqual, "!="), nil
+		}
 		l.pos++
 		return newToken(token.Bang, string(char)), nil
 	case '(':

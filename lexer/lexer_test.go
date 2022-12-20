@@ -38,6 +38,9 @@ if (5 < 10) {
 } else {
     return false;
 }
+
+10 == 10;
+10 != 9;
 `,
 			want: []token.Token{
 				{Type: token.Let, Literal: "let"},
@@ -105,6 +108,14 @@ if (5 < 10) {
 				{Type: token.False, Literal: "false"},
 				{Type: token.Semicolon, Literal: ";"},
 				{Type: token.RBrace, Literal: "}"},
+				{Type: token.Int, Literal: "10"},
+				{Type: token.Equal, Literal: "=="},
+				{Type: token.Int, Literal: "10"},
+				{Type: token.Semicolon, Literal: ";"},
+				{Type: token.Int, Literal: "10"},
+				{Type: token.NotEqual, Literal: "!="},
+				{Type: token.Int, Literal: "9"},
+				{Type: token.Semicolon, Literal: ";"},
 				{Type: token.EOF},
 			},
 		},
