@@ -11,27 +11,27 @@ type Token struct {
 }
 
 const (
-	ILLEGAL TokenType = "ILLEGAL"
+	Illegal TokenType = "ILLEGAL"
 	EOF     TokenType = "EOF"
 
 	// Identifiers and literals
-	IDENT TokenType = "IDENT" // add, foobar, x, y
-	INT   TokenType = "INT"   // 1, 2, 234234
+	Ident TokenType = "IDENT" // add, foobar, x, y
+	Int   TokenType = "INT"   // 1, 2, 234234
 
 	// Operators
-	ASSIGN TokenType = "="
-	PLUS   TokenType = "+"
+	Assign TokenType = "ASSIGN"
+	Plus   TokenType = "PLUS"
 
 	// Delimiters
-	COMMA     TokenType = ","
-	SEMICOLON TokenType = ";"
+	Comma     TokenType = "COMMA"
+	Semicolon TokenType = "SEMICOLON"
 
-	LPAREN TokenType = "("
-	RPAREN TokenType = ")"
-	LBRACE TokenType = "{"
-	RBRACE TokenType = "}"
+	LParen TokenType = "LPAREN"
+	RParen TokenType = "RPAREN"
+	LBrace TokenType = "LBRACE"
+	RBrace TokenType = "RBRACE"
 
 	// Keywords
-	FUNCTION TokenType = "FUNCTION"
-	LET      TokenType = "LET"
+	Function TokenType = "FUNCTION"
+	Let      TokenType = "LET"
 )
