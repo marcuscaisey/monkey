@@ -95,10 +95,10 @@ func (l *Lexer) NextToken() (token.Token, error) {
 		return newToken(token.Semicolon, string(char)), nil
 	case '(':
 		l.pos++
-		return newToken(token.LBrace, string(char)), nil
+		return newToken(token.LParen, string(char)), nil
 	case ')':
 		l.pos++
-		return newToken(token.RBrace, string(char)), nil
+		return newToken(token.RParen, string(char)), nil
 	case '{':
 		l.pos++
 		return newToken(token.LBrace, string(char)), nil
