@@ -74,12 +74,6 @@ func (l *Lexer) NextToken() (token.Token, error) {
 	case '*':
 		l.pos++
 		return newToken(token.Asterisk, string(char)), nil
-	case '<':
-		l.pos++
-		return newToken(token.Less, string(char)), nil
-	case '>':
-		l.pos++
-		return newToken(token.Greater, string(char)), nil
 	case '!':
 		if strings.HasPrefix(l.src[l.pos:], "!=") {
 			l.pos += 2
@@ -87,6 +81,18 @@ func (l *Lexer) NextToken() (token.Token, error) {
 		}
 		l.pos++
 		return newToken(token.Bang, string(char)), nil
+	case '<':
+		l.pos++
+		return newToken(token.Less, string(char)), nil
+	case '>':
+		l.pos++
+		return newToken(token.Greater, string(char)), nil
+	case ',':
+		l.pos++
+		return newToken(token.Comma, string(char)), nil
+	case ';':
+		l.pos++
+		return newToken(token.Semicolon, string(char)), nil
 	case '(':
 		l.pos++
 		return newToken(token.LBrace, string(char)), nil
@@ -99,12 +105,6 @@ func (l *Lexer) NextToken() (token.Token, error) {
 	case '}':
 		l.pos++
 		return newToken(token.RBrace, string(char)), nil
-	case ',':
-		l.pos++
-		return newToken(token.Comma, string(char)), nil
-	case ';':
-		l.pos++
-		return newToken(token.Semicolon, string(char)), nil
 	}
 
 	if int := l.readInt(); int != "" {
