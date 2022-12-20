@@ -59,9 +59,9 @@ func TestNextTokenPanicsIfCalledAfterEOFReturned(t *testing.T) {
 	}
 }
 
-func TestNextTokenReturnsInvalidUTF8ErrorIfSourceCodeIsNotValidUTF8(t *testing.T) {
+func TestNextTokenReturnsInvalidASCIIErrorIfSourceCodeIsNotValidUTF8(t *testing.T) {
 	src := "=\xFF"
-	wantErr := &lexer.InvalidUTF8Error{
+	wantErr := &lexer.InvalidASCIIError{
 		Byte:     0xFF,
 		Position: 1,
 	}
@@ -73,8 +73,8 @@ func TestNextTokenReturnsInvalidUTF8ErrorIfSourceCodeIsNotValidUTF8(t *testing.T
 	if gotErr == nil {
 		t.Fatalf("NextToken() should have returned an error, got (%+v, %v)", nextToken, gotErr)
 	}
-	var invalidUTF8Err *lexer.InvalidUTF8Error
-	if !errors.As(gotErr, &invalidUTF8Err) {
+	var invalidASCIIError *lexer.InvalidASCIIError
+	if !errors.As(gotErr, &invalidASCIIError) {
 		t.Fatalf("NextToken() returned error %q of type %T, should have been type %T", gotErr, gotErr, wantErr)
 	}
 	if diff := cmp.Diff(wantErr, gotErr); diff != "" {

@@ -4,22 +4,22 @@ package lexer
 
 import (
 	"fmt"
-	"unicode/utf8"
+	"unicode"
 
 	"github.com/marcuscaisey/monkey/token"
 )
 
-// InvalidUTF8Error is returned when the lexer encounters a byte in source code which is not valid UTF8.
-type InvalidUTF8Error struct {
+// InvalidASCIIError is returned when the lexer encounters a byte in source code which is not valid ASCII.
+type InvalidASCIIError struct {
 	Byte     byte
 	Position int
 }
 
-func (e *InvalidUTF8Error) Error() string {
-	return fmt.Sprintf("lexer: invalid UTF8 %q at byte %d", e.Byte, e.Position)
+func (e *InvalidASCIIError) Error() string {
+	return fmt.Sprintf("lexer: invalid ASCII character %q at byte %d", e.Byte, e.Position)
 }
 
-// Lexer parses Monkey source code which must be valid UTF8.
+// Lexer parses Monkey source code which must be valid ASCII.
 type Lexer struct {
 	src         string
 	eofReturned bool
@@ -36,7 +36,7 @@ func New(src string) *Lexer {
 // NextToken returns the next token from the source code.
 // Calling repeatedly will return all of the tokens, ending with a token of type [token.EOF]. Calling after this will
 // result in a panic.
-// An error will be returned if the source code is not valid UTF8.
+// An error will be returned if the source code is not valid ASCII.
 func (l *Lexer) NextToken() (token.Token, error) {
 	if l.eofReturned {
 		panic("lexer: NextToken called after EOF returned")
@@ -45,13 +45,13 @@ func (l *Lexer) NextToken() (token.Token, error) {
 		l.eofReturned = true
 		return token.Token{Type: token.EOF}, nil
 	}
-	literal, size := utf8.DecodeRuneInString(l.src[l.pos:])
-	if literal == utf8.RuneError {
-		return token.Token{}, &InvalidUTF8Error{Byte: l.src[l.pos], Position: 0}
+	char := l.src[l.pos]
+	if char > unicode.MaxASCII {
+		return token.Token{}, &InvalidASCIIError{Byte: l.src[l.pos], Position: l.pos}
 	}
-	l.pos += size
+	l.pos++
 	var tokenType token.TokenType
-	switch literal {
+	switch char {
 	case '=':
 		tokenType = token.Assign
 	case '+':
@@ -71,5 +71,5 @@ func (l *Lexer) NextToken() (token.Token, error) {
 	default:
 		tokenType = token.Illegal
 	}
-	return token.Token{Type: tokenType, Literal: string(literal)}, nil
+	return token.Token{Type: tokenType, Literal: string(char)}, nil
 }
