@@ -61,6 +61,24 @@ func (l *Lexer) NextToken() (token.Token, error) {
 	case '+':
 		l.pos++
 		return newToken(token.Plus, string(char)), nil
+	case '-':
+		l.pos++
+		return newToken(token.Minus, string(char)), nil
+	case '/':
+		l.pos++
+		return newToken(token.Slash, string(char)), nil
+	case '*':
+		l.pos++
+		return newToken(token.Asterisk, string(char)), nil
+	case '<':
+		l.pos++
+		return newToken(token.Less, string(char)), nil
+	case '>':
+		l.pos++
+		return newToken(token.Greater, string(char)), nil
+	case '!':
+		l.pos++
+		return newToken(token.Bang, string(char)), nil
 	case '(':
 		l.pos++
 		return newToken(token.LBrace, string(char)), nil

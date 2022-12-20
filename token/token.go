@@ -19,8 +19,14 @@ const (
 	Int   TokenType = "INT"   // 1, 2, 234234
 
 	// Operators
-	Assign TokenType = "ASSIGN"
-	Plus   TokenType = "PLUS"
+	Assign   TokenType = "ASSIGN"
+	Plus     TokenType = "PLUS"
+	Minus    TokenType = "MINUS"
+	Slash    TokenType = "SLASH"
+	Asterisk TokenType = "ASTERISK"
+	Less     TokenType = "LESS"
+	Greater  TokenType = "GREATER"
+	Bang     TokenType = "BANG"
 
 	// Delimiters
 	Comma     TokenType = "COMMA"

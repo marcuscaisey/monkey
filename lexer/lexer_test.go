@@ -19,7 +19,7 @@ func TestNextToken(t *testing.T) {
 		want []token.Token
 	}{
 		{
-			name: "ParsesComplexSource",
+			name: "ParsesSourceWithAllTokens",
 			src: `let five = 5;
 let ten = 10;
 
@@ -28,6 +28,10 @@ let add = fn(x, y) {
 };
 
 let result = add(five, ten);
+
+!-/*5;
+
+5 < 10 > 5;
 `,
 			want: []token.Token{
 				{Type: token.Let, Literal: "let"},
@@ -66,6 +70,18 @@ let result = add(five, ten);
 				{Type: token.Ident, Literal: "ten"},
 				{Type: token.RBrace, Literal: ")"},
 				{Type: token.Semicolon, Literal: ";"},
+				{Type: token.Bang, Literal: "!"},
+				{Type: token.Minus, Literal: "-"},
+				{Type: token.Slash, Literal: "/"},
+				{Type: token.Asterisk, Literal: "*"},
+				{Type: token.Int, Literal: "5"},
+				{Type: token.Semicolon, Literal: ";"},
+				{Type: token.Int, Literal: "5"},
+				{Type: token.Less, Literal: "<"},
+				{Type: token.Int, Literal: "10"},
+				{Type: token.Greater, Literal: ">"},
+				{Type: token.Int, Literal: "5"},
+				{Type: token.Semicolon, Literal: ";"},
 				{Type: token.EOF},
 			},
 		},
@@ -87,7 +103,7 @@ let result = add(five, ten);
 			},
 		},
 		{
-			name: "ReturnsILLEGALForUnknownCharaceters",
+			name: "ReturnsIllegalTokenTypeForUnknownCharaceters",
 			src:  "\\+\\+",
 			want: []token.Token{
 				{Type: token.Illegal, Literal: `\`},
