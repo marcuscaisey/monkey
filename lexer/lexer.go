@@ -8,7 +8,7 @@ import (
 	"github.com/marcuscaisey/monkey/token"
 )
 
-// Lexer parses Monkey source code.
+// Lexer parses Monkey source code containing only ASCII characters.
 type Lexer struct {
 	src         string
 	eofReturned bool

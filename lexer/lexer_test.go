@@ -1,7 +1,6 @@
 package lexer_test
 
 import (
-	"fmt"
 	"testing"
 	"unicode"
 
@@ -169,35 +168,60 @@ if (5 < 10) {
 	}
 }
 
-// TODO: add test with characters after starting position
 func TestNextTokenOnlyAllowsIdentsToStartWithLettersAndUnderscores(t *testing.T) {
 	for i := 0; i <= unicode.MaxASCII; i++ {
-		// leading whitespace will be ignored
+		// leading whitespace will be ignored so skip these characters
 		switch i {
 		case '\t', '\n', '\v', '\f', '\r', ' ':
 			continue
 		}
 
-		isValidFirstChar := false
-		testName := fmt.Sprintf("%vIsNotValidFirstChar", string(rune(i)))
+		src := string(rune(i)) + "a"
+		firstToken := lexer.New(src).NextToken()
+
 		if ('A' <= i && i <= 'Z') || ('a' <= i && i <= 'z') || i == '_' {
-			isValidFirstChar = true
-			testName = fmt.Sprintf("%vIsValidFirstChar", string(rune(i)))
-		}
-		t.Run(testName, func(t *testing.T) {
-			src := fmt.Sprint(string(rune(i)), "a")
-			lexer := lexer.New(src)
-			firstToken := lexer.NextToken()
-			if isValidFirstChar {
+			t.Run(string(rune(i))+"IsValid", func(t *testing.T) {
 				if firstToken.Type != token.Ident {
 					t.Fatalf("NextToken() = %+v for source %q, want type IDENT", firstToken, src)
 				}
-			} else {
+			})
+		} else {
+			t.Run(string(rune(i))+"IsNotValid", func(t *testing.T) {
 				if firstToken.Type == token.Ident {
 					t.Fatalf("NextToken() = %+v for source %q, should not have type IDENT", firstToken, src)
 				}
-			}
-		})
+			})
+		}
+	}
+}
+
+func TestNextTokenOnlyAllowsIdentsToContainLettersNumbersAndUnderscoreAfterFirstCharacter(t *testing.T) {
+	for i := 0; i <= unicode.MaxASCII; i++ {
+		// leading whitespace will be ignored so skip these characters
+		switch i {
+		case '\t', '\n', '\v', '\f', '\r', ' ':
+			continue
+		}
+
+		src := "a" + string(rune(i))
+		firstToken := lexer.New(src).NextToken()
+
+		if ('A' <= i && i <= 'Z') || ('a' <= i && i <= 'z') || ('0' <= i && i <= '9') || i == '_' {
+			t.Run(string(rune(i))+"IsValid", func(t *testing.T) {
+				want := token.Token{Type: token.Ident, Literal: src}
+				if firstToken != want {
+					t.Fatalf("NextToken() = %+v for source %q, want %+v", firstToken, src, want)
+				}
+			})
+		} else {
+			t.Run(string(rune(i))+"IsNotValid", func(t *testing.T) {
+				// character isn't valid so first token should just be "a"
+				want := token.Token{Type: token.Ident, Literal: "a"}
+				if firstToken != want {
+					t.Fatalf("NextToken() = %+v for source %q, want %+v", firstToken, src, want)
+				}
+			})
+		}
 	}
 }
 
