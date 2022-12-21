@@ -21,6 +21,7 @@ func (e *InvalidASCIIError) Error() string {
 }
 
 // Lexer parses Monkey source code which must be valid ASCII.
+// TODO: implement similar interface to bufio.Scanner so that we don't have to check for errors on each NextToken call.
 type Lexer struct {
 	src         string
 	eofReturned bool
