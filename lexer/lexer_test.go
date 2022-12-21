@@ -1,7 +1,6 @@
 package lexer_test
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 	"unicode"
@@ -116,7 +115,6 @@ if (5 < 10) {
 				{Type: token.NotEqual, Literal: "!="},
 				{Type: token.Int, Literal: "9"},
 				{Type: token.Semicolon, Literal: ";"},
-				{Type: token.EOF},
 			},
 		},
 		{
@@ -133,7 +131,6 @@ if (5 < 10) {
 				{Type: token.Int, Literal: "7"},
 				{Type: token.Int, Literal: "8"},
 				{Type: token.Int, Literal: "9"},
-				{Type: token.EOF},
 			},
 		},
 		{
@@ -144,38 +141,26 @@ if (5 < 10) {
 				{Type: token.Plus, Literal: "+"},
 				{Type: token.Illegal, Literal: `\`},
 				{Type: token.Plus, Literal: "+"},
-				{Type: token.EOF},
 			},
 		},
 		{
-			name: "ReturnsEOFIfSourceCodeIsEmpty",
+			name: "ReturnsNoTokensIfSourceCodeIsEmpty",
 			src:  "",
-			want: []token.Token{
-				{Type: token.EOF},
-			},
+			want: []token.Token{},
 		},
 		{
 			name: "IgnoresASCIIWhitespaceCharacters",
 			src:  "\t\n\v\f\r ",
-			want: []token.Token{
-				{Type: token.EOF},
-			},
+			want: []token.Token{},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			lexer := lexer.New(tc.src)
-			var got []token.Token
-			for {
-				nextToken, err := lexer.NextToken()
-				if err != nil {
-					t.Fatal(err)
-				}
+			got := []token.Token{}
+			for nextToken := lexer.NextToken(); nextToken.Type != token.EOF; nextToken = lexer.NextToken() {
 				got = append(got, nextToken)
-				if nextToken == (token.Token{Type: token.EOF}) {
-					break
-				}
 			}
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("NextToken() returned incorrect tokens from source %q\ndiff:\n--- want\n+++ got\n%s", tc.src, diff)
@@ -184,6 +169,7 @@ if (5 < 10) {
 	}
 }
 
+// TODO: add test with characters after starting position
 func TestNextTokenOnlyAllowsIdentsToStartWithLettersAndUnderscores(t *testing.T) {
 	for i := 0; i <= unicode.MaxASCII; i++ {
 		// leading whitespace will be ignored
@@ -201,10 +187,7 @@ func TestNextTokenOnlyAllowsIdentsToStartWithLettersAndUnderscores(t *testing.T)
 		t.Run(testName, func(t *testing.T) {
 			src := fmt.Sprint(string(rune(i)), "a")
 			lexer := lexer.New(src)
-			firstToken, err := lexer.NextToken()
-			if err != nil {
-				t.Fatal(err)
-			}
+			firstToken := lexer.NextToken()
 			if isValidFirstChar {
 				if firstToken.Type != token.Ident {
 					t.Fatalf("NextToken() = %+v for source %q, want type IDENT", firstToken, src)
@@ -218,52 +201,11 @@ func TestNextTokenOnlyAllowsIdentsToStartWithLettersAndUnderscores(t *testing.T)
 	}
 }
 
-func TestNextTokenPanicsIfCalledAfterEOFReturned(t *testing.T) {
+func TestNextTokenReturnsEOFIfCalledAfterEOFReturned(t *testing.T) {
 	lexer := lexer.New("")
-	lexer.NextToken() // EOF
-
-	want := "lexer: NextToken called after EOF returned"
-	defer func() {
-		if got := recover(); got == nil {
-			t.Fatalf("NextToken() should have panicked")
-		} else if got != want {
-			t.Fatalf("NextToken() panicked with %q, want %q", got, want)
-		}
-	}()
-
-	lexer.NextToken()
-}
-
-func TestNextTokenReturnsInvalidASCIIErrorIfSourceCodeIsNotValidUTF8(t *testing.T) {
-	src := "=\xFF"
-	wantErr := &lexer.InvalidASCIIError{
-		Byte:     0xFF,
-		Position: 1,
-	}
-
-	l := lexer.New(src)
-	l.NextToken()
-
-	nextToken, gotErr := l.NextToken()
-	if gotErr == nil {
-		t.Fatalf("NextToken() should have returned an error, got (%+v, %v)", nextToken, gotErr)
-	}
-	var invalidASCIIError *lexer.InvalidASCIIError
-	if !errors.As(gotErr, &invalidASCIIError) {
-		t.Fatalf("NextToken() returned error %q of type %T, should have been type %T", gotErr, gotErr, wantErr)
-	}
-	if diff := cmp.Diff(wantErr, gotErr); diff != "" {
-		t.Fatalf("NextToken() returned incorrect error from source %q\ndiff:\n--- want\n+++ got\n%s", src, diff)
-	}
-}
-
-func TestInvalidASCIIErrorString(t *testing.T) {
-	err := &lexer.InvalidASCIIError{
-		Byte:     0xFF,
-		Position: 5,
-	}
-	want := "lexer: invalid ASCII character 'ÿ' at byte 5"
-	if got := err.Error(); got != want {
-		t.Fatalf("%#v.Error() = %q, want %q", err, got, want)
+	want := []token.Token{{Type: token.EOF}, {Type: token.EOF}}
+	got := []token.Token{lexer.NextToken(), lexer.NextToken()}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("NextToken() returned incorrect tokens when called twice on empty source\ndiff:\n--- want\n+++ got\n%s", diff)
 	}
 }

@@ -20,24 +20,9 @@ func Start(in io.Reader, out io.Writer) {
 			return
 		}
 		line := scanner.Text()
-		if err := printAllTokens(line, out); err != nil {
-			fmt.Fprintln(out, err)
-			continue
+		lexer := lexer.New(line)
+		for tok := lexer.NextToken(); tok.Type != token.EOF; tok = lexer.NextToken() {
+			fmt.Fprintf(out, "%+v\n", tok)
 		}
 	}
-}
-
-func printAllTokens(src string, out io.Writer) error {
-	lexer := lexer.New(src)
-	for {
-		nextToken, err := lexer.NextToken()
-		if err != nil {
-			return err
-		}
-		fmt.Fprintf(out, "%+v\n", nextToken)
-		if nextToken.Type == token.EOF {
-			break
-		}
-	}
-	return nil
 }

@@ -3,25 +3,12 @@
 package lexer
 
 import (
-	"fmt"
 	"strings"
-	"unicode"
 
 	"github.com/marcuscaisey/monkey/token"
 )
 
-// InvalidASCIIError is returned when the lexer encounters a byte in source code which is not valid ASCII.
-type InvalidASCIIError struct {
-	Byte     byte
-	Position int
-}
-
-func (e *InvalidASCIIError) Error() string {
-	return fmt.Sprintf("lexer: invalid ASCII character %q at byte %d", e.Byte, e.Position)
-}
-
-// Lexer parses Monkey source code which must be valid ASCII.
-// TODO: implement similar interface to bufio.Scanner so that we don't have to check for errors on each NextToken call.
+// Lexer parses Monkey source code.
 type Lexer struct {
 	src         string
 	eofReturned bool
@@ -36,95 +23,84 @@ func New(src string) *Lexer {
 }
 
 // NextToken returns the next token from the source code.
-// Calling repeatedly will return all of the tokens, ending with a token of type [token.EOF]. Calling after this will
-// result in a panic.
-// An error will be returned if the source code is not valid ASCII.
-func (l *Lexer) NextToken() (token.Token, error) {
-	if l.eofReturned {
-		panic("lexer: NextToken called after EOF returned")
-	}
-
+// Calling repeatedly will return all of the tokens, ending with a token of type [token.EOF]. Calls after this will
+// always return a [token.EOF].
+func (l *Lexer) NextToken() token.Token {
 	l.consumeWhitespace()
-	if l.pos == len(l.src) {
-		l.eofReturned = true
-		return token.Token{Type: token.EOF}, nil
-	}
-
-	char := l.src[l.pos]
-	if char > unicode.MaxASCII {
-		return token.Token{}, &InvalidASCIIError{Byte: l.src[l.pos], Position: l.pos}
-	}
-
-	switch char {
+	switch char := l.readChar(); char {
+	case 0:
+		return newToken(token.EOF, "")
 	case '=':
-		if strings.HasPrefix(l.src[l.pos:], "==") {
-			l.pos += 2
-			return newToken(token.Equal, "=="), nil
+		if l.peekChar() == '=' {
+			l.readChar()
+			return newToken(token.Equal, "==")
 		}
-		l.pos++
-		return newToken(token.Assign, string(char)), nil
+		return newToken(token.Assign, string(char))
 	case '+':
-		l.pos++
-		return newToken(token.Plus, string(char)), nil
+		return newToken(token.Plus, string(char))
 	case '-':
-		l.pos++
-		return newToken(token.Minus, string(char)), nil
+		return newToken(token.Minus, string(char))
 	case '/':
-		l.pos++
-		return newToken(token.Slash, string(char)), nil
+		return newToken(token.Slash, string(char))
 	case '*':
-		l.pos++
-		return newToken(token.Asterisk, string(char)), nil
+		return newToken(token.Asterisk, string(char))
 	case '!':
-		if strings.HasPrefix(l.src[l.pos:], "!=") {
-			l.pos += 2
-			return newToken(token.NotEqual, "!="), nil
+		if l.peekChar() == '=' {
+			l.readChar()
+			return newToken(token.NotEqual, "!=")
 		}
-		l.pos++
-		return newToken(token.Bang, string(char)), nil
+		return newToken(token.Bang, string(char))
 	case '<':
-		l.pos++
-		return newToken(token.Less, string(char)), nil
+		return newToken(token.Less, string(char))
 	case '>':
-		l.pos++
-		return newToken(token.Greater, string(char)), nil
+		return newToken(token.Greater, string(char))
 	case ',':
-		l.pos++
-		return newToken(token.Comma, string(char)), nil
+		return newToken(token.Comma, string(char))
 	case ';':
-		l.pos++
-		return newToken(token.Semicolon, string(char)), nil
+		return newToken(token.Semicolon, string(char))
 	case '(':
-		l.pos++
-		return newToken(token.LParen, string(char)), nil
+		return newToken(token.LParen, string(char))
 	case ')':
-		l.pos++
-		return newToken(token.RParen, string(char)), nil
+		return newToken(token.RParen, string(char))
 	case '{':
-		l.pos++
-		return newToken(token.LBrace, string(char)), nil
+		return newToken(token.LBrace, string(char))
 	case '}':
-		l.pos++
-		return newToken(token.RBrace, string(char)), nil
+		return newToken(token.RBrace, string(char))
+	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		return newToken(token.Int, l.readCharsWhile(char, isNumber))
+	default:
+		if isValidFirstIdentChar(char) {
+			ident := l.readCharsWhile(char, isValidIdentChar)
+			tokenType := token.IdentTokenType(ident)
+			return newToken(tokenType, ident)
+		}
+		return newToken(token.Illegal, string(char))
 	}
+}
 
-	if int := l.readInt(); int != "" {
-		return newToken(token.Int, int), nil
+// readChar consumes the character at the current position and returns it. If the end of the source has been reached, a
+// null character is returned.
+func (l *Lexer) readChar() byte {
+	if l.pos == len(l.src) {
+		return 0
 	}
-
-	if ident := l.readIdent(); ident != "" {
-		tokenType := token.IdentTokenType(ident)
-		return newToken(tokenType, ident), nil
-	}
-
+	char := l.src[l.pos]
 	l.pos++
-	return newToken(token.Illegal, string(char)), nil
+	return char
+}
+
+// peekChar returns the character at the current position but doesn't consume it.
+func (l *Lexer) peekChar() byte {
+	if l.pos == len(l.src) {
+		return 0
+	}
+	return l.src[l.pos]
 }
 
 // consumeWhitespace consumes the whitespace at the current position in the source.
 func (l *Lexer) consumeWhitespace() {
-	for l.pos < len(l.src) && isWhitespace(l.src[l.pos]) {
-		l.pos++
+	for isWhitespace(l.peekChar()) {
+		l.readChar()
 	}
 }
 
@@ -137,30 +113,27 @@ func isWhitespace(char byte) bool {
 	}
 }
 
-// readInt reads the integer at the current position in the source and returns "" if there isn't one.
-func (l *Lexer) readInt() string {
-	int := strings.Builder{}
-	for ; l.pos < len(l.src) && isNumber(l.src[l.pos]); l.pos++ {
-		int.WriteString(string(l.src[l.pos]))
+// readCharsWhile builds a string starting with the given character and then added to by consuming characters until
+// isValid returns false.
+func (l *Lexer) readCharsWhile(firstChar byte, isValid func(char byte) bool) string {
+	b := strings.Builder{}
+	b.WriteByte(firstChar)
+	for isValid(l.peekChar()) {
+		b.WriteByte(l.readChar())
 	}
-	return int.String()
+	return b.String()
 }
 
 func isNumber(char byte) bool {
 	return '0' <= char && char <= '9'
 }
 
-// readIdent reads the identifier at the current position in the source and returns "" if there isn't one.
-func (l *Lexer) readIdent() string {
-	ident := strings.Builder{}
-	for ; l.pos < len(l.src) && isValidIdentChar(l.src[l.pos]); l.pos++ {
-		ident.WriteString(string(l.src[l.pos]))
-	}
-	return ident.String()
+func isValidFirstIdentChar(c byte) bool {
+	return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || c == '_'
 }
 
-func isValidIdentChar(char byte) bool {
-	return ('a' <= char && char <= 'z') || ('A' <= char && char <= 'Z') || ('0' <= char && char <= '9') || char == '_'
+func isValidIdentChar(c byte) bool {
+	return isValidFirstIdentChar(c) || ('0' <= c && c <= '9')
 }
 
 func newToken(tokenType token.TokenType, literal string) token.Token {
